@@ -2,10 +2,10 @@
 
 suppressPackageStartupMessages(library(argparse))
 suppressPackageStartupMessages(library(dplyr))
-library(TwoSampleMR)
-library(magrittr)
-library(data.table)
-library(tidyr)
+suppressPackageStartupMessages(library(TwoSampleMR))
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(tidyr))
 
 write_out <- function(x, basename, header=FALSE)
 {
@@ -48,12 +48,6 @@ parser$add_argument('--palindrome-freq', type="double", default=0.4)
 
 args <- parser$parse_args()
 # args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas", "../sandpit/GUGC_MetaAnalysis_Results_UA.csv", "--snplist", "../sandpit/instrument-master.txt", "--snp-col", "1", "--ncontrol-col", "2", "--oa-col", 4, "--ea-col", 3, "--pval-col", 7, "--beta-col", 5, "--se-col", 6, "--delimiter", ",", "--header"))
-
-# fgrep <- ifelse(args[["gzipped"]], "zfgrep", "fgrep")
-# cmd <- paste0(
-# 	fgrep, " -wf ", args[["snplist"]], " ", args[["gwas"]], " | gzip -c > ", args[["gwas"]], ".master.gz"
-# )
-
 
 # read gwas
 input <- ifelse(args[["gzipped"]], paste0("gunzip -c ", args[["gwas"]]), args[["gwas"]])
