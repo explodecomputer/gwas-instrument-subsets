@@ -1,7 +1,6 @@
-R = 'Rscript'
 ref = '../ref/data_maf0.01_rs_snps'
 
-# Gather data files
+# Gather cleaned gwas files
 
 import glob, os.path
 from pathlib import Path   
@@ -19,12 +18,14 @@ gwas_dict = find_files('/projects/MRC-IEU/research/data/evidencehub/summary/gwas
 gwas_dict = find_files('/projects/MRC-IEU/research/data/ukbiobank/summary/gwas/dev/release_candidate/data/ukb-pipeline/cleaned', gwas_dict)
 
 
-# Create YAML files
+# Create a rule defining all the final files
 
 rule all:
 	input: 
 		expand('../data/{gwas_name}.harmonised.csv.gz', gwas_name=gwas_dict.keys())
 
+
+# Step 1: clump each GWAS
 
 rule clump:
     input:
@@ -35,6 +36,8 @@ rule clump:
         "./clump.py --bfile {ref} --gwas {input} --out {output} --snp-col 1 --pval-col 7 --delimiter $'\\t' --gzipped 1 --header 0"
 
 
+# Step 2: Create a master list of all unique instrumenting SNPs
+
 rule master_list:
 	output:
 		'../data/instrument-master.txt'
@@ -42,6 +45,8 @@ rule master_list:
 		expand('../data/{gwas_name}.snplist', gwas_name=gwas_dict.keys())
 	shell:
 		'./master_list.py --bfile {ref} --dirs ../data --output {output}'
+
+# Step 3: Extract the master list from each GWAS
 
 rule extract_master:
 	output:
