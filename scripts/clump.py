@@ -10,6 +10,7 @@ import json
 parser = argparse.ArgumentParser(description = 'Extract and clump top hits')
 parser.add_argument('--bfile', required=True)
 parser.add_argument('--gwas', required=True)
+parser.add_argument('--out', required=True)
 parser.add_argument('--pval-threshold', type=float, default=5e-8)
 parser.add_argument('--snp-col', type=int, required=True)
 parser.add_argument('--pval-col', type=int, required=True)
@@ -25,7 +26,7 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler(vars(args)['gwas']+'.clump-log')
+handler = logging.FileHandler(vars(args)['out']+'.clump-log')
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -33,7 +34,7 @@ logger.addHandler(handler)
 logger.info(json.dumps(vars(args), indent=1))
 
 
-snplist=vars(args)['gwas'] + '.tophits'
+snplist=vars(args)['out'] + '.tophits'
 
 if vars(args)['gzipped'] is True:
 	f = gzip.open(vars(args)['gwas'], 'rt')
