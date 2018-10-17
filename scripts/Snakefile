@@ -12,6 +12,7 @@ def find_files(DIR, gwas_dict):
 		gwas_name = f.name.replace('.gz', '')
 		gwas_dict[gwas_name] = str(f)
 	return gwas_dict
+
 gwas_dict = {}
 gwas_dict = find_files('/projects/MRC-IEU/research/data/evidencehub/summary/gwas/dev/release_candidate/data/results/mrbase/cleaned_for_elastic', gwas_dict)
 gwas_dict = find_files('/projects/MRC-IEU/research/data/evidencehub/summary/gwas/dev/release_candidate/data/results/ukbb_broad/cleaned_597_files', gwas_dict)
@@ -20,11 +21,19 @@ gwas_dict = find_files('/projects/MRC-IEU/research/data/ukbiobank/summary/gwas/d
 
 # Create YAML files
 
+rule snplist:
+	output:
+		'../data/instrument-master.txt'
+	input:
+		expand('../data/{gwas_name}.snplist', gwas_name=gwas_dict.keys())
+	shell:
+		'./master_list.py --dirs ../data --output: {output}'
+
 rule clump_yaml:
     input:
         lambda wildcards: gwas_dict[wildcards.gwas_name]
     output:
-        'data/{gwas_name}.yaml'
+        '../data/{gwas_name}.snplist'
     shell:
         "./clump_py --bfile {ref} --gwas {input} --out {output} --snp-col 1 --pval-col --delimiter $'\t' --gzipped 1 --header 0"
 

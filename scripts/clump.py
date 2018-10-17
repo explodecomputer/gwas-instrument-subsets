@@ -34,7 +34,7 @@ logger.addHandler(handler)
 logger.info(json.dumps(vars(args), indent=1))
 
 
-snplist=vars(args)['out'] + '.tophits'
+snplist=vars(args)['out']
 
 if vars(args)['gzipped'] is True:
 	f = gzip.open(vars(args)['gwas'], 'rt')
@@ -86,6 +86,6 @@ else:
 		os.remove(snplist + '.clumped.snplist')
 	except OSError:
 		pass
-	open(snplist + '.clumped.snplist', 'a').close()
+	open(snplist + '.snplist', 'a').close()
 
 
