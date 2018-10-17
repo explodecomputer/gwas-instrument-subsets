@@ -7,7 +7,7 @@ import glob, os.path
 from pathlib import Path   
 
 def find_files(DIR, gwas_dict):
-	gwas_path = Path(DIR).glob('GUGC*')
+	gwas_path = Path(DIR).glob('*.gz')
 	for f in gwas_path:
 		gwas_name = f.name.replace('.gz', '')
 		gwas_dict[gwas_name] = str(f)
@@ -25,15 +25,14 @@ rule all:
 	input: 
 		expand('../data/{gwas_name}.harmonised.csv.gz', gwas_name=gwas_dict.keys())
 
-rule extract_master:
-	output:
-		'../data/{gwas_name}.harmonised.csv.gz'
-	input:
-		a = rules.master_list.output, b = lambda wildcards: gwas_dict[wildcards.gwas_name]
-	shell:
-		"./extract_master.r --bfile {ref} --gwas {input.b} --out {output} --snplist {input.a} --snp-col 1 --ea-col 2 --oa-col 3 --eaf-col 4 --beta-col 5 --se-col 6 --pval-col 7 --ncontrol-col 8 --delimiter $'\\t' --gzipped 1 --header 0"
 
-
+rule clump:
+    input:
+        lambda wildcards: gwas_dict[wildcards.gwas_name]
+    output:
+        '../data/{gwas_name}.snplist'
+    shell:
+        "./clump.py --bfile {ref} --gwas {input} --out {output} --snp-col 1 --pval-col 7 --delimiter $'\\t' --gzipped 1 --header 0"
 
 
 rule master_list:
@@ -44,13 +43,13 @@ rule master_list:
 	shell:
 		'./master_list.py --bfile {ref} --dirs ../data --output {output}'
 
+rule extract_master:
+	output:
+		'../data/{gwas_name}.harmonised.csv.gz'
+	input:
+		a = rules.master_list.output, b = lambda wildcards: gwas_dict[wildcards.gwas_name]
+	shell:
+		"./extract_master.r --bfile {ref} --gwas {input.b} --out {output} --snplist {input.a} --snp-col 1 --ea-col 2 --oa-col 3 --eaf-col 4 --beta-col 5 --se-col 6 --pval-col 7 --ncontrol-col 8 --delimiter $'\\t' --gzipped 1 --header 0"
 
 
-rule clump:
-    input:
-        lambda wildcards: gwas_dict[wildcards.gwas_name]
-    output:
-        '../data/{gwas_name}.snplist'
-    shell:
-        "./clump.py --bfile {ref} --gwas {input} --out {output} --snp-col 1 --pval-col 7 --delimiter $'\\t' --gzipped 1 --header 0"
 
