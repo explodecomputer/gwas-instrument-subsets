@@ -27,9 +27,10 @@ is_palindrome <- function(a1, a2)
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
 parser$add_argument('--gwas', required=TRUE)
+parser$add_argument('--out', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
-parser$add_argument('--header', action='store_true', default=FALSE)
-parser$add_argument('--gzipped', action='store_true', default=FALSE)
+parser$add_argument('--header', type="integer", default=0)
+parser$add_argument('--gzipped', type="integer", default=0)
 parser$add_argument('--delimiter', default=' ')
 parser$add_argument('--snp-col', type="integer", required=TRUE)
 parser$add_argument('--ea-col', type="integer", required=TRUE)
@@ -38,8 +39,8 @@ parser$add_argument('--eaf-col', type="integer", required=FALSE)
 parser$add_argument('--beta-col', type="integer", required=TRUE)
 parser$add_argument('--se-col', type="integer", required=TRUE)
 parser$add_argument('--pval-col', type="integer", required=TRUE)
-parser$add_argument('--ncase-col', type="integer", required=FALSE)
-parser$add_argument('--ncontrol-col', type="integer", required=FALSE)
+parser$add_argument('--ncase-col', type="integer", default=NULL)
+parser$add_argument('--ncontrol-col', type="integer", default=NULL)
 parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
 parser$add_argument('--tag-nsnp', type="double", default=5000)
@@ -49,9 +50,13 @@ parser$add_argument('--palindrome-freq', type="double", default=0.4)
 args <- parser$parse_args()
 # args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas", "../sandpit/GUGC_MetaAnalysis_Results_UA.csv", "--snplist", "../sandpit/instrument-master.txt", "--snp-col", "1", "--ncontrol-col", "2", "--oa-col", 4, "--ea-col", 3, "--pval-col", 7, "--beta-col", 5, "--se-col", 6, "--delimiter", ",", "--header"))
 
+
+rootname <- gsub(".csv.gz$", "", args[["out"]])
+
+
 # read gwas
-input <- ifelse(args[["gzipped"]], paste0("gunzip -c ", args[["gwas"]]), args[["gwas"]])
-gwas <- fread(input, header=args[["header"]], sep=args[["delimiter"]])
+input <- ifelse(args[["gzipped"]] == 1, paste0("gunzip -c ", args[["gwas"]]), args[["gwas"]])
+gwas <- fread(input, header=as.logical(args[["header"]]), sep=args[["delimiter"]])
 
 # Rename gwas columns
 cols <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "ncase_col", "ncontrol_col")
@@ -134,21 +139,21 @@ if(length(missing_snps) > 0)
 	# write gwas snplist + missing_list
 	# write missing_list
 	# run plink
-	write.table(c(missing_snps, gwas[["snp_col"]]), file=paste0(args[["gwas"]], ".searchspace"), row=FALSE, col=FALSE, qu=FALSE)
-	write.table(missing_snps, file=paste0(args[["gwas"]], ".targets"), row=FALSE, col=FALSE, qu=FALSE)
+	write.table(c(missing_snps, gwas[["snp_col"]]), file=paste0(rootname, ".searchspace"), row=FALSE, col=FALSE, qu=FALSE)
+	write.table(missing_snps, file=paste0(rootname, ".targets"), row=FALSE, col=FALSE, qu=FALSE)
 	cmd <- paste0(
 		"plink --bfile ", args[["bfile"]], 
-		" --extract ", args[["gwas"]], ".searchspace",
+		" --extract ", rootname, ".searchspace",
 		" --r2 in-phase with-freqs gz",
-		" --ld-snp-list ", args[["gwas"]], ".targets",
+		" --ld-snp-list ", rootname, ".targets",
 		" --ld-window-kb ", args[["tag_kb"]],
 		" --ld-window-r2 ", args[["tag_r2"]],
 		" --ld-window ", args[["tag_nsnp"]],
-		" --out ", args[["gwas"]], ".targets"
+		" --out ", rootname, ".targets"
 	)
 	system(cmd)
 
-	ld <- fread(paste0("gunzip -c ", args[["gwas"]], ".targets.ld.gz"), header=TRUE) %>%
+	ld <- fread(paste0("gunzip -c ", rootname, ".targets.ld.gz"), header=TRUE) %>%
 		filter(SNP_A != SNP_B) %>%
 		mutate(PHASE=gsub("/", "", PHASE))
 	temp <- do.call(rbind, strsplit(ld$PHASE, "")) %>% as_data_frame
@@ -220,5 +225,5 @@ message("Found SNPs: ", sum(is.na(gwas_1$proxy)))
 message("Proxy SNPs: ", sum(!is.na(gwas_1$proxy)))
 message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 
-out <- paste0(args[["gwas"]], ".harmonised")
-write_out(gwas_1, out)
+write_out(gwas_1, rootname)
+

@@ -15,8 +15,8 @@ parser.add_argument('--pval-threshold', type=float, default=5e-8)
 parser.add_argument('--snp-col', type=int, required=True)
 parser.add_argument('--pval-col', type=int, required=True)
 parser.add_argument('--delimiter', default=' ')
-parser.add_argument('--gzipped', action='store_true', default=False)
-parser.add_argument('--header', action='store_true', default=False)
+parser.add_argument('--gzipped', type=int, default=0)
+parser.add_argument('--header', type=int, default=0)
 parser.add_argument('--clump-r2', type=float, default=0.001)
 parser.add_argument('--clump-kb', type=float, default=1000)
 
@@ -36,12 +36,12 @@ logger.info(json.dumps(vars(args), indent=1))
 
 snplist=vars(args)['out']
 
-if vars(args)['gzipped'] is True:
+if vars(args)['gzipped'] == 1:
 	f = gzip.open(vars(args)['gwas'], 'rt')
 else:
 	f = open(vars(args)['gwas'], 'rt')
 
-if vars(args)['header'] is True:
+if vars(args)['header'] == 1:
 	f.readline()
 
 o = open(snplist, 'wt')
