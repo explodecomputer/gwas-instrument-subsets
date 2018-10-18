@@ -53,7 +53,7 @@ SFTP = RemoteProvider(username=config['user'], password=config['password'])
 
 rule all:
 	input: 
-		expand('data/{gwas_name}.harmonised.csv.gz', gwas_name=gwas_dict.keys()), lambda wildcards: SFTP.remote(SERVER + gwas_dict[wildcards.gwas_name]), 'data/instrument-master.txt'
+		expand('data/{gwas_name}.harmonised.csv.gz', gwas_name=gwas_dict.keys())
 
 
 
