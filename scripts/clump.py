@@ -19,7 +19,6 @@ parser.add_argument('--gzipped', type=int, default=0)
 parser.add_argument('--header', type=int, default=0)
 parser.add_argument('--clump-r2', type=float, default=0.001)
 parser.add_argument('--clump-kb', type=float, default=1000)
-parser.add_argument('--clump-kb', type=float, default=1000)
 parser.add_argument('--clean', action='store_true', default=False)
 
 args = parser.parse_args()
@@ -94,10 +93,9 @@ else:
 	open(snplist + '.clumped.snplist', 'a').close()
 
 if vars(args)['clean'] is True:
-	os.remove(snplist)
-	os.remove(snplist+'.clumped')
-	os.remove(snplist+'.log')
-	os.remove(snplist+'.nosex')
-	os.remove(snplist+'.clumped.asdasdasd')
-	os.remove(snplist+'.clumped')
+	for f in [snplist + x for x in ['', '.clumped', '.log', '.nosex', '.clumped']]:
+		try:
+			os.remove(f)
+		except OSError:
+			pass
 
