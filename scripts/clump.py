@@ -50,9 +50,12 @@ o.write('SNP P\n')
 n=0
 for line in f:
 	x = line.strip().split(vars(args)['delimiter'])
-	if float(x[vars(args)['pval_col'] - 1]) < vars(args)['pval_threshold']:
-		o.write(x[vars(args)['snp_col'] - 1] + ' ' + x[vars(args)['pval_col'] - 1] + '\n')
-		n+=1
+	try:
+		if float(x[vars(args)['pval_col'] - 1]) < vars(args)['pval_threshold']:
+			o.write(x[vars(args)['snp_col'] - 1] + ' ' + x[vars(args)['pval_col'] - 1] + '\n')
+			n+=1
+	except:
+		logger.info("Error parsing line")
 
 o.close()
 f.close()
