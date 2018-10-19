@@ -14,7 +14,7 @@ parser.add_argument('--output', required=True)
 parser.add_argument('--bfile', required=True)
 
 
-args=parser.parse_args(['--dirs', '../sandpit', '--output', '../sandpit/instrument-master.txt', '--bfile', '../ref/data_maf0.01_rs_snps'])
+args=parser.parse_args(['--dirs', '../studies', '--output', '../studies/instrument-master.txt', '--bfile', '../ref/data_maf0.01_rs_snps'])
 
 args = parser.parse_args()
 
@@ -29,7 +29,7 @@ logger.info(json.dumps(vars(args), indent=1))
 
 filelist = []
 for d in vars(args)['dirs']:
-	filelist += glob.glob(d + '/*.snplist')
+	filelist += glob.glob(d + '/*/clump.txt')
 
 logger.info("found " + str(len(filelist)) + " snp lists")
 
