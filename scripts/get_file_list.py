@@ -22,6 +22,10 @@ parser.add_argument('--neo4j-password', required=True)
 
 args = parser.parse_args()
 
+if not os.path.exists(vars(args)['outdir']):
+	os.makedirs(vars(args)['outdir'])
+
+
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(vars(args)['server'], username=vars(args)['user'])
@@ -42,7 +46,7 @@ for DIR in vars(args)['dirs']:
 print("Total files: " + str(len(gwas_dict)))
 
 # These are all the files
-with open("files_rdsf.txt", 'wt') as out:
+with open("000_rdsf_full_list.txt", 'wt') as out:
 	for f in gwas_dict:
 		out.write(os.path.join(gwas_dict[f], f) + "\n")
 
@@ -94,9 +98,6 @@ with open(os.path.join(vars(args)['outdir'],"000_missing_id.txt"), 'wt') as o:
 	for i in missing_id:
 		o.write(i + '\n')
 
-if not os.path.exists(vars(args)['outdir']):
-	os.makedirs(vars(args)['outdir'])
-
 
 mrbase = []
 for d in ids:
@@ -120,7 +121,10 @@ for d in ids:
 			'ncontrol_col': 8,
 			'ncase_col': 9
 		})
-		with open(os.path.join(vars(args)['outdir'], d['id']) + '.json', 'wt') as o:
+		outdir = os.path.join(vars(args)['outdir'], d['id'])
+		if not os.path.exists(outdir):
+			os.makedirs(outdir)
+		with open(os.path.join(outdir, 'metadata.json'), 'wt') as o:
 			json.dump(
 				mrbase[-1],
 				o, 

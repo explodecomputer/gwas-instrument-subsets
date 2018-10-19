@@ -28,7 +28,6 @@ is_palindrome <- function(a1, a2)
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
 parser$add_argument('--gwas-info', required=TRUE)
-parser$add_argument('--outdir', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
 parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
@@ -45,7 +44,10 @@ print(args)
 gwas_info <- read_json(args[['gwas_info']])
 
 
-rootname <- file.path(args[['outdir']], gwas_info[['id']])
+rootname <- dirname(args[['gwas_info']])
+tempname <- file.path(rootname, "temp")
+outname <- file.path(rootname, "master_list")
+# rootname <- file.path(args[['outdir']], gwas_info[['id']])
 # rootname <- gsub(".csv.gz$", "", args[["out"]])
 
 
@@ -136,21 +138,21 @@ if(length(missing_snps) > 0)
 	# write gwas snplist + missing_list
 	# write missing_list
 	# run plink
-	write.table(c(missing_snps, gwas[["snp_col"]]), file=paste0(rootname, ".searchspace"), row=FALSE, col=FALSE, qu=FALSE)
-	write.table(missing_snps, file=paste0(rootname, ".targets"), row=FALSE, col=FALSE, qu=FALSE)
+	write.table(c(missing_snps, gwas[["snp_col"]]), file=paste0(tempname, ".searchspace"), row=FALSE, col=FALSE, qu=FALSE)
+	write.table(missing_snps, file=paste0(tempname, ".targets"), row=FALSE, col=FALSE, qu=FALSE)
 	cmd <- paste0(
 		"plink --bfile ", args[["bfile"]], 
-		" --extract ", rootname, ".searchspace",
+		" --extract ", tempname, ".searchspace",
 		" --r2 in-phase with-freqs gz",
-		" --ld-snp-list ", rootname, ".targets",
+		" --ld-snp-list ", tempname, ".targets",
 		" --ld-window-kb ", args[["tag_kb"]],
 		" --ld-window-r2 ", args[["tag_r2"]],
 		" --ld-window ", args[["tag_nsnp"]],
-		" --out ", rootname, ".targets"
+		" --out ", tempname, ".targets"
 	)
 	system(cmd)
 
-	ld <- fread(paste0("gunzip -c ", rootname, ".targets.ld.gz"), header=TRUE) %>%
+	ld <- fread(paste0("gunzip -c ", tempname, ".targets.ld.gz"), header=TRUE) %>%
 		filter(SNP_A != SNP_B) %>%
 		mutate(PHASE=gsub("/", "", PHASE))
 	temp <- do.call(rbind, strsplit(ld$PHASE, "")) %>% as_data_frame
@@ -222,14 +224,12 @@ message("Found SNPs: ", sum(is.na(gwas_1$proxy)))
 message("Proxy SNPs: ", sum(!is.na(gwas_1$proxy)))
 message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 
-write_out(gwas_1, rootname)
+write_out(gwas_1, outname)
 
 
 if(args[["clean"]] == TRUE)
 {
-	message("removing ancilliary files for ", rootname)
+	message("removing ancilliary files for ", tempname)
 	unlink(paste0(rootname, c(".searchspace", ".targets", ".targets.ld.gz", ".targets.log", ".targets.nosex")))
 }
-
-
 
