@@ -38,7 +38,9 @@ parser$add_argument('--clean', action="store_true", default=FALSE)
 
 
 args <- parser$parse_args()
-args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "temp.json", "--snplist", "temp/instrument-master.txt", "--outdir", "temp"))
+# args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "temp.json", "--snplist", "temp/instrument-master.txt", "--outdir", "temp", "--clean"))
+
+print(args)
 
 gwas_info <- read_json(args[['gwas_info']])
 
