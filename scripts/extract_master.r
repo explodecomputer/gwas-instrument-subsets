@@ -34,10 +34,11 @@ parser$add_argument('--tag-kb', type="double", default=5000)
 parser$add_argument('--tag-nsnp', type="double", default=5000)
 parser$add_argument('--palindrome-freq', type="double", default=0.4)
 parser$add_argument('--no-clean', action="store_true", default=FALSE)
+parser$add_argument('--rdsf-config', required=FALSE, default='')
 
 
 args <- parser$parse_args()
-args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "../studies/2/metadata.json", "--snplist", "../studies/master_list.txt", "--clean"))
+# args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "../studies/2/metadata.json", "--snplist", "../studies/master_list.txt", "--no-clean"))
 
 print(args)
 
@@ -50,12 +51,29 @@ outname <- file.path(rootname, "master_list")
 # rootname <- file.path(args[['outdir']], gwas_info[['id']])
 # rootname <- gsub(".csv.gz$", "", args[["out"]])
 
-
-
 # read gwas
 input_file <- file.path(gwas_info[['elastic_file_path']], gwas_info[['elastic_file']])
+
+if(args[['rdsf_config']] != '')
+{
+	message("Downloading GWAS")
+	initial.options <- commandArgs(trailingOnly = FALSE)
+	script_dir <- dirname(sub("--file=", "", initial.options[grep("--file=", initial.options)]))
+	localfile <- file.path(rootname, gwas_info[['elastic_file']])
+	cmd <- paste0(
+
+		file.path(script_dir, "download_gwas.py"),
+		" --rdsf-config ", args[['rdsf_config']],
+		" --remotepath ", input_file,
+		" --localpath ", localfile
+	)
+	system(cmd)
+	input_file <- localfile
+}
+
 input <- ifelse(gwas_info[["gzipped"]] == 1, paste0("gunzip -c ", input_file), input_file)
 gwas <- fread(input, header=as.logical(gwas_info[["header"]]), sep=gwas_info[["delimiter"]])
+unlink(localfile)
 
 # Rename gwas columns
 cols <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "ncase_col", "ncontrol_col")

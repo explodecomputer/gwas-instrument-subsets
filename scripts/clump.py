@@ -7,6 +7,18 @@ import os
 import logging
 import json
 import glob
+import paramiko
+
+def download_gwas(rdsf_config, remotepath, localpath):
+	config = json.load(open(rdsf_config, 'rt'))
+	client = paramiko.SSHClient()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	client.connect(config['server'], username=config['user'])
+	sftp = client.open_sftp()
+	sftp.get(remotepath, localpath)
+	sftp.close()
+	client.close()
+
 
 parser = argparse.ArgumentParser(description = 'Extract and clump top hits')
 parser.add_argument('--bfile', required=True)
@@ -15,6 +27,7 @@ parser.add_argument('--pval-threshold', type=float, default=5e-8)
 parser.add_argument('--clump-r2', type=float, default=0.001)
 parser.add_argument('--clump-kb', type=float, default=1000)
 parser.add_argument('--no-clean', action='store_true', default=False)
+parser.add_argument('--rdsf-config', required=False, default='')
 
 args = parser.parse_args()
 
@@ -22,7 +35,6 @@ gwas_info = json.load(open(vars(args)['gwas_info'], 'rt'))
 rootname = os.path.dirname(vars(args)['gwas_info'])
 tempfile = os.path.join(rootname, 'temp')
 outfile = os.path.join(rootname, 'clump.txt')
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,8 +46,14 @@ logger.addHandler(handler)
 logger.info(json.dumps(vars(args), indent=1))
 
 
-
 gwaspath = os.path.join(gwas_info['elastic_file_path'], gwas_info['elastic_file'])
+localpath = os.path.join(rootname, gwas_info['elastic_file'])
+
+if vars(args)['rdsf_config'] != '':
+	logger.info("Downloading file")
+	download_gwas(vars(args)['rdsf_config'], gwaspath, localpath)
+	gwaspath = localpath
+
 
 if gwas_info['gzipped'] == 1:
 	f = gzip.open(gwaspath, 'rt')
@@ -47,6 +65,7 @@ if gwas_info['header'] == 1:
 
 o = open(tempfile + '.tophits', 'wt')
 o.write('SNP P\n')
+
 
 n=0
 for line in f:
@@ -60,6 +79,8 @@ for line in f:
 
 o.close()
 f.close()
+os.remove(localpath)
+
 
 logger.info("found " + str(n) + " hits")
 
