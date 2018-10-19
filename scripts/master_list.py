@@ -29,7 +29,7 @@ logger.info(json.dumps(vars(args), indent=1))
 
 filelist = []
 for d in vars(args)['dirs']:
-	filelist += glob.glob(d + '/*.clumped.snplist')
+	filelist += glob.glob(d + '/*.snplist')
 
 logger.info("found " + str(len(filelist)) + " snp lists")
 
@@ -53,4 +53,6 @@ o.close()
 
 cmd = "plink --bfile " + vars(args)['bfile'] + " --extract " + vars(args)['output'] + " --freq --out " + vars(args)['bfile'] + ".master"
 subprocess.call(cmd, shell=True)
+
+
 

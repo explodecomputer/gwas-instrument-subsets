@@ -1,0 +1,12 @@
+{
+	"__default__" :
+	{
+		"partition": "mrcieu",
+		"nodes": "1",
+		"cpus-per-task": "1",
+		"time": "0-00:30:00",
+		"mem": "6G",
+		"output": "logs/{rule}.{wildcards}.out"
+	}
+}
+
