@@ -33,11 +33,11 @@ parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
 parser$add_argument('--tag-nsnp', type="double", default=5000)
 parser$add_argument('--palindrome-freq', type="double", default=0.4)
-parser$add_argument('--clean', action="store_true", default=FALSE)
+parser$add_argument('--no-clean', action="store_true", default=FALSE)
 
 
 args <- parser$parse_args()
-# args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "temp.json", "--snplist", "temp/instrument-master.txt", "--outdir", "temp", "--clean"))
+args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "../studies/2/metadata.json", "--snplist", "../studies/master_list.txt", "--clean"))
 
 print(args)
 
@@ -227,7 +227,7 @@ message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 write_out(gwas_1, outname)
 
 
-if(args[["clean"]] == TRUE)
+if(args[["no_clean"]] == FALSE)
 {
 	message("removing ancilliary files for ", tempname)
 	unlink(paste0(rootname, c(".searchspace", ".targets", ".targets.ld.gz", ".targets.log", ".targets.nosex")))
