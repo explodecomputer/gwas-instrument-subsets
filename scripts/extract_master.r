@@ -6,6 +6,7 @@ suppressPackageStartupMessages(library(TwoSampleMR))
 suppressPackageStartupMessages(library(magrittr))
 suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(jsonlite))
 
 write_out <- function(x, basename, header=FALSE)
 {
@@ -26,21 +27,9 @@ is_palindrome <- function(a1, a2)
 # create parser object
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
-parser$add_argument('--gwas', required=TRUE)
-parser$add_argument('--out', required=TRUE)
+parser$add_argument('--gwas-info', required=TRUE)
+parser$add_argument('--outdir', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
-parser$add_argument('--header', type="integer", default=0)
-parser$add_argument('--gzipped', type="integer", default=0)
-parser$add_argument('--delimiter', default=' ')
-parser$add_argument('--snp-col', type="integer", required=TRUE)
-parser$add_argument('--ea-col', type="integer", required=TRUE)
-parser$add_argument('--oa-col', type="integer", required=FALSE)
-parser$add_argument('--eaf-col', type="integer", required=FALSE)
-parser$add_argument('--beta-col', type="integer", required=TRUE)
-parser$add_argument('--se-col', type="integer", required=TRUE)
-parser$add_argument('--pval-col', type="integer", required=TRUE)
-parser$add_argument('--ncase-col', type="integer", default=NULL)
-parser$add_argument('--ncontrol-col', type="integer", default=NULL)
 parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
 parser$add_argument('--tag-nsnp', type="double", default=5000)
@@ -48,24 +37,29 @@ parser$add_argument('--palindrome-freq', type="double", default=0.4)
 
 
 args <- parser$parse_args()
-# args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas", "../sandpit/GUGC_MetaAnalysis_Results_UA.csv", "--snplist", "../sandpit/instrument-master.txt", "--snp-col", "1", "--ncontrol-col", "2", "--oa-col", 4, "--ea-col", 3, "--pval-col", 7, "--beta-col", 5, "--se-col", 6, "--delimiter", ",", "--header"))
+args <- parser$parse_args(c("--bfile", "../ref/data_maf0.01_rs_snps", "--gwas-info", "temp.json", "--snplist", "temp/instrument-master.txt", "--outdir", "temp"))
+
+gwas_info <- read_json(args[['gwas_info']])
 
 
-rootname <- gsub(".csv.gz$", "", args[["out"]])
+rootname <- file.path(args[['outdir']], gwas_info[['id']])
+# rootname <- gsub(".csv.gz$", "", args[["out"]])
+
 
 
 # read gwas
-input <- ifelse(args[["gzipped"]] == 1, paste0("gunzip -c ", args[["gwas"]]), args[["gwas"]])
-gwas <- fread(input, header=as.logical(args[["header"]]), sep=args[["delimiter"]])
+input_file <- file.path(gwas_info[['elastic_file_path']], gwas_info[['elastic_file']])
+input <- ifelse(gwas_info[["gzipped"]] == 1, paste0("gunzip -c ", input_file), input_file)
+gwas <- fread(input, header=as.logical(gwas_info[["header"]]), sep=gwas_info[["delimiter"]])
 
 # Rename gwas columns
 cols <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "ncase_col", "ncontrol_col")
 for(i in cols)
 {
-	if(!is.null(args[[i]]))
+	if(gwas_info[[i]] != "")
 	{
 		message("renaming ", i)
-		names(gwas)[args[[i]]] <- i
+		names(gwas)[gwas_info[[i]]] <- i
 	} else {
 		message("missing ", i)
 		gwas[[i]] <- NA
