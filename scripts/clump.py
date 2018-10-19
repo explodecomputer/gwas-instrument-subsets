@@ -45,7 +45,7 @@ else:
 if vars(args)['header'] == 1:
 	f.readline()
 
-o = open(snplist, 'wt')
+o = open(snplist + '.tophits', 'wt')
 o.write('SNP P\n')
 
 n=0
@@ -65,7 +65,7 @@ logger.info("found " + str(n) + " hits")
 
 if n > 0:
 	x = ('plink --bfile ' + vars(args)['bfile'] +
-	' --clump ' + snplist +
+	' --clump ' + snplist + '.tophits' +
 	' --clump-kb ' + str(vars(args)['clump_kb']) +
 	' --clump-r2 ' + str(vars(args)['clump_r2']) +
 	' --clump-p1 ' + str(vars(args)['pval_threshold']) +
@@ -73,7 +73,7 @@ if n > 0:
 	' --out ' + snplist)
 	subprocess.call(x, shell=True)
 	f = open(snplist + '.clumped', 'rt')
-	o = open(snplist + '.clumped.snplist', 'wt')
+	o = open(snplist, 'wt')
 	f.readline()
 	n=0
 	for line in f:
@@ -87,13 +87,13 @@ if n > 0:
 	logger.info("found " + str(n) + " clumps")
 else:
 	try:
-		os.remove(snplist + '.clumped.snplist')
+		os.remove(snplist)
 	except OSError:
 		pass
-	open(snplist + '.clumped.snplist', 'a').close()
+	open(snplist, 'a').close()
 
 if vars(args)['clean'] is True:
-	for f in [snplist + x for x in ['', '.clumped', '.log', '.nosex', '.clumped']]:
+	for f in [snplist + x for x in ['.tophits', '.log', '.nosex', '.clumped']]:
 		try:
 			os.remove(f)
 		except OSError:

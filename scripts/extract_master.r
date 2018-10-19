@@ -45,6 +45,7 @@ parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
 parser$add_argument('--tag-nsnp', type="double", default=5000)
 parser$add_argument('--palindrome-freq', type="double", default=0.4)
+parser$add_argument('--clean', action="store_true", default=FALSE)
 
 
 args <- parser$parse_args()
@@ -226,4 +227,13 @@ message("Proxy SNPs: ", sum(!is.na(gwas_1$proxy)))
 message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 
 write_out(gwas_1, rootname)
+
+
+if(args[["clean"]] == TRUE)
+{
+	message("removing ancilliary files for ", rootname)
+	unlink(paste0(rootname, c(".searchspace", ".targets", ".targets.ld.gz", ".targets.log", ".targets.nosex")))
+}
+
+
 
