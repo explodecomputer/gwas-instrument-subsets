@@ -248,6 +248,6 @@ write_out(gwas_1, outname)
 if(args[["no_clean"]] == FALSE)
 {
 	message("removing ancilliary files for ", tempname)
-	unlink(paste0(rootname, c(".searchspace", ".targets", ".targets.ld.gz", ".targets.log", ".targets.nosex")))
+	unlink(paste0(tempname, c(".searchspace", ".targets", ".targets.ld.gz", ".targets.log", ".targets.nosex")))
 }
 
