@@ -119,7 +119,7 @@ for d in ids:
 			'se_col': 6,
 			'pval_col': 7,
 			'ncontrol_col': 8,
-			'ncase_col': 9
+			'ncase_col': ""
 		})
 		outdir = os.path.join(vars(args)['outdir'], d['id'])
 		if not os.path.exists(outdir):

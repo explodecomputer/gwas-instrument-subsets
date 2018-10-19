@@ -18,13 +18,11 @@ parser.add_argument('--no-clean', action='store_true', default=False)
 
 args = parser.parse_args()
 
-if not os.path.exists(vars(args)['outdir']):
-	os.makedirs(vars(args)['outdir'])
-
 gwas_info = json.load(open(vars(args)['gwas_info'], 'rt'))
 rootname = os.path.dirname(vars(args)['gwas_info'])
 tempfile = os.path.join(rootname, 'temp')
 outfile = os.path.join(rootname, 'clump.txt')
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
