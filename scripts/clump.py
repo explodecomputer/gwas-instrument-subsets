@@ -13,7 +13,7 @@ def download_gwas(rdsf_config, remotepath, localpath):
 	config = json.load(open(rdsf_config, 'rt'))
 	client = paramiko.SSHClient()
 	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	client.connect(config['server'], username=config['user'])
+	client.connect(config['server'], username=config['user'], password=config['password'])
 	sftp = client.open_sftp()
 	sftp.get(remotepath, localpath)
 	sftp.close()
@@ -51,7 +51,9 @@ localpath = os.path.join(rootname, gwas_info['elastic_file'])
 
 if vars(args)['rdsf_config'] != '':
 	logger.info("Downloading file")
-	download_gwas(vars(args)['rdsf_config'], gwaspath, localpath)
+	cmd = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'download_gwas.py') + ' --rdsf-config ' + vars(args)['rdsf_config'] + ' --remotepath ' + gwaspath + ' --localpath ' + localpath
+	subprocess.call(cmd, shell=True)
+	# download_gwas(vars(args)['rdsf_config'], gwaspath, localpath)
 	gwaspath = localpath
 
 

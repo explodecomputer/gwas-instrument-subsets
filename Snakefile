@@ -5,7 +5,7 @@ RDSF_CONFIG = 'rdsf_config.json'
 
 ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
 
-# ID = ['2', '6', '7']
+ID = ['2', '6', '7']
 
 # Create a rule defining all the final files
 
