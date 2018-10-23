@@ -3,11 +3,18 @@ import os.path
 REF = 'ref/data_maf0.01_rs_snps'
 RDSF_CONFIG = 'rdsf_config.json'
 
-ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
+# ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
 
 ID = ['2', '6', '7']
 
 # Create a rule defining all the final files
+
+configfile: 'config.json'
+
+
+from snakemake.remote.SFTP import RemoteProvider
+SFTP = RemoteProvider(username=config['user'], password=config['password'])
+
 
 rule all:
 	input: 
@@ -18,11 +25,11 @@ rule all:
 
 rule clump:
 	input:
-		'studies/{id}/metadata.json'
+		a='studies/{id}/metadata.json', b=SFTP.remote('newblue4.acrc.bris.ac.uk/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies/{id}/harmonised.gz')
 	output:
 		'studies/{id}/clump.txt'
 	shell:
-		"./scripts/clump.py --bfile {REF} --gwas-info {input} --rdsf-config {RDSF_CONFIG}"
+		"./scripts/clump.py --bfile {REF} --gwas-info {input.a} --gwas {input.b}"
 
 
 # Step 2: Create a master list of all unique instrumenting SNPs
@@ -41,7 +48,7 @@ rule extract_master:
 	output:
 		'studies/{id}/master_list.csv.gz'
 	input:
-		a = rules.master_list.output, b = 'studies/{id}/metadata.json'
+		a = rules.master_list.output, b = 'studies/{id}/metadata.json', c = SFTP.remote('newblue4.acrc.bris.ac.uk/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies/{id}/harmonised.gz')
 	shell:
-		"./scripts/extract_master.r --bfile {REF} --gwas-info {input.b} --snplist {input.a} --rdsf-config {RDSF_CONFIG}"
+		"./scripts/extract_master.r --bfile {REF} --gwas-info {input.b} --snplist {input.a} --gwas {input.c}"
 

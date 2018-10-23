@@ -28,6 +28,7 @@ is_palindrome <- function(a1, a2)
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
 parser$add_argument('--gwas-info', required=TRUE)
+parser$add_argument('--gwas', required=FALSE)
 parser$add_argument('--snplist', required=TRUE)
 parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
@@ -52,7 +53,13 @@ outname <- file.path(rootname, "master_list")
 # rootname <- gsub(".csv.gz$", "", args[["out"]])
 
 # read gwas
-input_file <- file.path(gwas_info[['elastic_file_path']], gwas_info[['elastic_file']])
+
+if(!is.null(args[['gwas']]))
+{
+	input_file <- args[['gwas']]
+} else {
+	input_file <- file.path(gwas_info[['elastic_file_path']], gwas_info[['elastic_file']])
+}
 
 if(args[['rdsf_config']] != '')
 {
@@ -73,7 +80,11 @@ if(args[['rdsf_config']] != '')
 
 input <- ifelse(gwas_info[["gzipped"]] == 1, paste0("gunzip -c ", input_file), input_file)
 gwas <- fread(input, header=as.logical(gwas_info[["header"]]), sep=gwas_info[["delimiter"]])
-unlink(localfile)
+
+if(args[['rdsf_config']] != '')
+{
+	unlink(localfile)
+}
 
 # Rename gwas columns
 cols <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "ncase_col", "ncontrol_col")

@@ -23,6 +23,7 @@ def download_gwas(rdsf_config, remotepath, localpath):
 parser = argparse.ArgumentParser(description = 'Extract and clump top hits')
 parser.add_argument('--bfile', required=True)
 parser.add_argument('--gwas-info', required=True)
+parser.add_argument('--gwas', required=False)
 parser.add_argument('--pval-threshold', type=float, default=5e-8)
 parser.add_argument('--clump-r2', type=float, default=0.001)
 parser.add_argument('--clump-kb', type=float, default=1000)
@@ -47,7 +48,12 @@ logger.info(json.dumps(vars(args), indent=1))
 
 
 gwaspath = os.path.join(gwas_info['elastic_file_path'], gwas_info['elastic_file'])
-localpath = os.path.join(rootname, gwas_info['elastic_file'])
+# gwaspath = os.path.join('/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies', gwas_info['id'], 'harmonised.gz')
+if args.gwas is not None:
+	gwaspath = vars(args)['gwas']
+
+# localpath = os.path.join(rootname, gwas_info['elastic_file'])
+localpath = os.path.join(rootname, 'harmonised.gz')
 
 if vars(args)['rdsf_config'] != '':
 	logger.info("Downloading file")
@@ -81,8 +87,11 @@ for line in f:
 
 o.close()
 f.close()
-os.remove(localpath)
 
+try:
+	os.remove(localpath)
+except OSError:
+	pass
 
 logger.info("found " + str(n) + " hits")
 
