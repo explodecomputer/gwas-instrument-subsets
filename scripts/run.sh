@@ -10,7 +10,11 @@
 --neo4j-password aW4tNBhWKxhd
 
 
-
+for i in studies/*/metadata.json
+do
+echo $i
+sed -i 's@: 9@: ""@g' $i
+done
 
 
 #!/bin/bash
@@ -76,7 +80,7 @@ MarkerName,n_total,A1,A2,beta,se,p_gc
 
 
 
-snakemake -j 200 --cluster-config bc4-cluster.json --cluster "sbatch --partition {cluster.partition} --nodes {cluster.nodes} --cpus-per-task {cluster.cpus-per-task} --time {cluster.time} --mem {cluster.mem} --output {cluster.output}"
+snakemake -r -j 4 --cluster-config bc4-cluster.json --cluster "sbatch --partition {cluster.partition} --nodes {cluster.nodes} --cpus-per-task {cluster.cpus-per-task} --time {cluster.time} --mem {cluster.mem} --output {cluster.output}"
 
 
 
