@@ -2,12 +2,27 @@
 --server newblue4.acrc.bris.ac.uk \
 --user gh13047 \
 --dirs /projects/MRC-IEU/research/data/evidencehub/summary/gwas/dev/release_candidate/data/results/mrbase/cleaned_for_elastic \
-/projects/MRC-IEU/research/data/evidencehub/summary/gwas/dev/release_candidate/data/results/ukbb_broad/cleaned_597_files \
-/projects/MRC-IEU/research/data/ukbiobank/summary/gwas/dev/release_candidate/data/ukb-pipeline/cleaned \
+/projects/MRC-IEU/research/data/evidencehub/summary/gwas/dev/release_candidate/data/results/ukbb_broad/cleaned_for_elastic \
+/projects/MRC-IEU/research/data/ukbiobank/summary/gwas/dev/release_candidate/data/cleaned_for_elastic \
 --outdir ../studies \
 --neo4j-bolt bolt://ieu-db-interface.epi.bris.ac.uk:27687 \
 --neo4j-user gib \
 --neo4j-password aW4tNBhWKxhd
+
+
+ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
+
+import json
+import os
+import subprocess
+
+for id in ID:
+	print(id)
+	j = json.load(open(os.path.join("studies", id, "metadata.json"), "rt"))
+	cmd = 'ln -s ' + os.path.join(j['elastic_file_path'], j['elastic_file']) + ' ' + os.path.join('studies', id, 'harmonised.gz')
+	subprocess.call(cmd, shell=True)
+
+
 
 
 for i in studies/*/metadata.json
@@ -80,9 +95,7 @@ MarkerName,n_total,A1,A2,beta,se,p_gc
 
 
 
-snakemake -r -j 4 --cluster-config bc4-cluster.json --cluster "sbatch --partition {cluster.partition} --nodes {cluster.nodes} --cpus-per-task {cluster.cpus-per-task} --time {cluster.time} --mem {cluster.mem} --output {cluster.output}"
-
-
+snakemake -pr -j 3 --cluster-config bc4-cluster.json --cluster "sbatch --partition {cluster.partition} --nodes {cluster.nodes} --cpus-per-task {cluster.cpus-per-task} --time {cluster.time} --mem {cluster.mem} --output {cluster.output}"
 
 
 1. Create json files for all datasets
