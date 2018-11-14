@@ -2,8 +2,6 @@ import os.path
 
 # Define some variables
 REF = 'ref/data_maf0.01_rs_snps'
-RDSF_CONFIG = 'rdsf_config.json'
-
 configfile: 'config.json'
 
 # Find all the initial study files
