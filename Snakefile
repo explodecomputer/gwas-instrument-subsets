@@ -1,25 +1,26 @@
 import os.path
 
+# Define some variables
 REF = 'ref/data_maf0.01_rs_snps'
 RDSF_CONFIG = 'rdsf_config.json'
 
-# ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
-
-ID = ['2', '6', '7']
-
-# Create a rule defining all the final files
-
 configfile: 'config.json'
 
+# Find all the initial study files
+# ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
+ID = ['2', '6', '7']
 
+
+# Setup SFTP
 from snakemake.remote.SFTP import RemoteProvider
 SFTP = RemoteProvider(username=config['user'], password=config['password'])
 
 
+# Create a rule defining all the final files
+
 rule all:
 	input: 
 		expand('studies/{id}/master_list.csv.gz', id=ID)
-
 
 # Step 1: clump each GWAS
 
