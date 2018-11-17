@@ -10,7 +10,7 @@ suppressPackageStartupMessages(library(jsonlite))
 
 write_out <- function(x, basename, header=FALSE)
 {
-	g <- gzfile(paste0(basename, ".csv.gz"), "w")
+	g <- gzfile(paste0(basename), "w")
 	write.table(x, g, row.names=FALSE, col.names=FALSE, na="", sep=",")
 	close(g)
 	if(header) write.table(x[0,], file=paste0(basename, "_header.csv"), row.names=FALSE, col.names=TRUE, sep=",")
@@ -27,8 +27,8 @@ is_palindrome <- function(a1, a2)
 # create parser object
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
-parser$add_argument('--gwas-info', required=TRUE)
 parser$add_argument('--gwas', required=FALSE)
+parser$add_argument('--out', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
 parser$add_argument('--tag-r2', type="double", default=0.6)
 parser$add_argument('--tag-kb', type="double", default=5000)
@@ -43,69 +43,26 @@ args <- parser$parse_args()
 
 print(args)
 
-gwas_info <- read_json(args[['gwas_info']])
-
-
-rootname <- dirname(args[['gwas_info']])
+rootname <- dirname(args[['out']])
 tempname <- file.path(rootname, "temp")
-outname <- file.path(rootname, "master_list")
+outname <- args[['out']]
 # rootname <- file.path(args[['outdir']], gwas_info[['id']])
 # rootname <- gsub(".csv.gz$", "", args[["out"]])
 
 # read gwas
 
-if(!is.null(args[['gwas']]))
-{
-	input_file <- args[['gwas']]
-} else {
-	input_file <- file.path(gwas_info[['elastic_file_path']], gwas_info[['elastic_file']])
-}
+input_file <- args[['gwas']]
 
-if(args[['rdsf_config']] != '')
-{
-	message("Downloading GWAS")
-	initial.options <- commandArgs(trailingOnly = FALSE)
-	script_dir <- dirname(sub("--file=", "", initial.options[grep("--file=", initial.options)]))
-	localfile <- file.path(rootname, gwas_info[['elastic_file']])
-	cmd <- paste0(
-
-		file.path(script_dir, "download_gwas.py"),
-		" --rdsf-config ", args[['rdsf_config']],
-		" --remotepath ", input_file,
-		" --localpath ", localfile
-	)
-	system(cmd)
-	input_file <- localfile
-}
-
-input <- ifelse(gwas_info[["gzipped"]] == 1, paste0("gunzip -c ", input_file), input_file)
-gwas <- fread(input, header=as.logical(gwas_info[["header"]]), sep=gwas_info[["delimiter"]])
-
-if(args[['rdsf_config']] != '')
-{
-	unlink(localfile)
-}
+input <- paste0("gunzip -c ", input_file)
+gwas <- fread(input)
 
 # Rename gwas columns
-cols <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "ncase_col", "ncontrol_col")
-for(i in cols)
-{
-	if(gwas_info[[i]] != "")
-	{
-		message("renaming ", i)
-		names(gwas)[gwas_info[[i]]] <- i
-	} else {
-		message("missing ", i)
-		gwas[[i]] <- NA
-	}
-}
-gwas <- select(gwas, cols)
+names(gwas) <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "samplesize_col")
 
 snplist <- scan(args[["snplist"]], what="character")
 gwas_1 <- gwas[gwas[["snp_col"]] %in% snplist, ]
 
 # harmonise
-
 
 ref <- fread(paste0(args[["bfile"]], ".master.frq"))
 ref$beta <- 1
@@ -127,14 +84,13 @@ b <- format_data(gwas_1, type="outcome",
 	effect_allele_col="ea_col",
 	other_allele_col="oa_col",
 	eaf_col="eaf_col",
-	ncase_col="ncase_col",
-	ncontrol_col="ncontrol_col",
+	samplesize_col="samplesize_col",
 	pval_col="pval_col"
 )
 
 ab <- harmonise_data(a, b)
 
-check_cols <- c("ncase.outcome", "ncontrol.outcome", "effect_allele.outcome", "other_allele.outcome", "eaf.outcome", "pval.outcome", "beta.outcome", "se.outcome", "SNP")
+check_cols <- c("samplesize.outcome", "effect_allele.outcome", "other_allele.outcome", "eaf.outcome", "pval.outcome", "beta.outcome", "se.outcome", "SNP")
 
 for(i in check_cols)
 {
@@ -153,8 +109,7 @@ gwas_1 <- ab %>% filter(mr_keep) %$%
 		beta=beta.outcome,
 		se=se.outcome,
 		eaf=eaf.outcome,
-		ncase=ncase.outcome,
-		ncontrol=ncontrol.outcome,
+		samplesize=samplesize.outcome,
 		pval=pval.outcome
 	)
 
@@ -208,8 +163,7 @@ if(length(missing_snps) > 0)
 		effect_allele_col="ea_col",
 		other_allele_col="oa_col",
 		eaf_col="eaf_col",
-		ncase_col="ncase_col",
-		ncontrol_col="ncontrol_col",
+		samplesize_col="samplesize_col",
 		pval_col="pval_col"
 	)
 	ab <- harmonise_data(a,b)
@@ -222,8 +176,7 @@ if(length(missing_snps) > 0)
 			proxy_eaf=eaf.outcome,
 			beta=beta.outcome,
 			se=se.outcome,
-			ncase=ncase.outcome,
-			ncontrol=ncontrol.outcome,
+			samplesize=samplesize.outcome,
 			pval=pval.outcome
 		)
 	temp <- ld %$% 
@@ -245,7 +198,7 @@ if(length(missing_snps) > 0)
 }
 
 gwas_1 <- select(gwas_1,
-	SNP, ea, oa, beta, se, eaf, ncase, ncontrol, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
+	SNP, ea, oa, beta, se, eaf, samplesize, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
 )
 names(gwas_1)[1] <- "snp"
 

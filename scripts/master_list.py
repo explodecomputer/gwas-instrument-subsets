@@ -29,7 +29,7 @@ logger.info(json.dumps(vars(args), indent=1))
 
 filelist = []
 for d in vars(args)['dirs']:
-	filelist += glob.glob(d + '/*/clump.txt')
+	filelist += glob.glob(d + '/*/derived/instruments/clump.txt')
 
 logger.info("found " + str(len(filelist)) + " snp lists")
 
