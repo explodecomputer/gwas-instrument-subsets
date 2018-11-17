@@ -9,78 +9,45 @@ import json
 import glob
 import paramiko
 
-def download_gwas(rdsf_config, remotepath, localpath):
-	config = json.load(open(rdsf_config, 'rt'))
-	client = paramiko.SSHClient()
-	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	client.connect(config['server'], username=config['user'], password=config['password'])
-	sftp = client.open_sftp()
-	sftp.get(remotepath, localpath)
-	sftp.close()
-	client.close()
-
-
 parser = argparse.ArgumentParser(description = 'Extract and clump top hits')
 parser.add_argument('--bfile', required=True)
-parser.add_argument('--gwas-info', required=True)
-parser.add_argument('--gwas', required=False)
+parser.add_argument('--gwas', required=True)
+parser.add_argument('--out', required=True)
 parser.add_argument('--pval-threshold', type=float, default=5e-8)
 parser.add_argument('--clump-r2', type=float, default=0.001)
 parser.add_argument('--clump-kb', type=float, default=1000)
 parser.add_argument('--no-clean', action='store_true', default=False)
-parser.add_argument('--rdsf-config', required=False, default='')
 
 args = parser.parse_args()
 
-gwas_info = json.load(open(vars(args)['gwas_info'], 'rt'))
-rootname = os.path.dirname(vars(args)['gwas_info'])
-tempfile = os.path.join(rootname, 'temp')
-outfile = os.path.join(rootname, 'clump.txt')
+gwasfile = vars(args)['gwas']
+outfile = vars(args)['out']
+outdir = os.path.dirname(outfile)
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler(os.path.join(rootname, 'clump.log'))
+handler = logging.FileHandler(os.path.join(outdir, 'clump.log'))
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.info(json.dumps(vars(args), indent=1))
 
+# Expect gzipped file
+f = gzip.open(gwasfile, 'rt')
+# Read header
+f.readline()
 
-gwaspath = os.path.join(gwas_info['elastic_file_path'], gwas_info['elastic_file'])
-# gwaspath = os.path.join('/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies', gwas_info['id'], 'harmonised.gz')
-if args.gwas is not None:
-	gwaspath = vars(args)['gwas']
-
-# localpath = os.path.join(rootname, gwas_info['elastic_file'])
-localpath = os.path.join(rootname, 'harmonised.gz')
-
-if vars(args)['rdsf_config'] != '':
-	logger.info("Downloading file")
-	cmd = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'download_gwas.py') + ' --rdsf-config ' + vars(args)['rdsf_config'] + ' --remotepath ' + gwaspath + ' --localpath ' + localpath
-	subprocess.call(cmd, shell=True)
-	# download_gwas(vars(args)['rdsf_config'], gwaspath, localpath)
-	gwaspath = localpath
-
-
-if gwas_info['gzipped'] == 1:
-	f = gzip.open(gwaspath, 'rt')
-else:
-	f = open(gwaspath, 'rt')
-
-if gwas_info['header'] == 1:
-	f.readline()
-
-o = open(tempfile + '.tophits', 'wt')
+o = open(outfile + '.tophits', 'wt')
 o.write('SNP P\n')
-
 
 n=0
 for line in f:
-	x = line.strip().split(gwas_info['delimiter'])
+	x = line.strip().split("\n")
 	try:
-		if float(x[gwas_info['pval_col'] - 1]) < vars(args)['pval_threshold']:
-			o.write(x[gwas_info['snp_col'] - 1] + ' ' + x[gwas_info['pval_col'] - 1] + '\n')
+		if float(x[6]) < vars(args)['pval_threshold']:
+			o.write(x[0] + ' ' + x[6] + '\n')
 			n+=1
 	except:
 		logger.info("Error parsing line")
@@ -88,23 +55,19 @@ for line in f:
 o.close()
 f.close()
 
-try:
-	os.remove(localpath)
-except OSError:
-	pass
 
 logger.info("found " + str(n) + " hits")
 
 if n > 0:
 	x = ('plink --bfile ' + vars(args)['bfile'] +
-	' --clump ' + tempfile + '.tophits' +
+	' --clump ' + outfile + '.tophits' +
 	' --clump-kb ' + str(vars(args)['clump_kb']) +
 	' --clump-r2 ' + str(vars(args)['clump_r2']) +
 	' --clump-p1 ' + str(vars(args)['pval_threshold']) +
 	' --clump-p2 ' + str(vars(args)['pval_threshold']) +
-	' --out ' + tempfile)
+	' --out ' + outfile)
 	subprocess.call(x, shell=True)
-	f = open(tempfile + '.clumped', 'rt')
+	f = open(outfile + '.clumped', 'rt')
 	o = open(outfile, 'wt')
 	f.readline()
 	n=0
@@ -125,5 +88,6 @@ else:
 	open(outfile, 'a').close()
 
 if vars(args)['no_clean'] is False:
-	for f in glob.glob(tempfile + "*"):
+	for f in glob.glob(outfile + ".*"):
 		os.remove(f)
+

@@ -1,35 +1,34 @@
 import os.path
 
+# Define some variables
 REF = 'ref/data_maf0.01_rs_snps'
-RDSF_CONFIG = 'rdsf_config.json'
+# configfile: 'config.json'
 
-# ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
+# Find all the initial study files
+ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
+# ID = ['2', '6', '7']
+ID = [1237]
 
-ID = ['2', '6', '7']
+# Setup SFTP
+#from snakemake.remote.SFTP import RemoteProvider
+#SFTP = RemoteProvider(username=config['user'], password=config['password'])
+
 
 # Create a rule defining all the final files
 
-configfile: 'config.json'
-
-
-from snakemake.remote.SFTP import RemoteProvider
-SFTP = RemoteProvider(username=config['user'], password=config['password'])
-
-
 rule all:
 	input: 
-		expand('studies/{id}/master_list.csv.gz', id=ID)
-
+		expand('studies/{id}/derived/instruments/master_list.csv.gz', id=ID)
 
 # Step 1: clump each GWAS
 
 rule clump:
 	input:
-		a='studies/{id}/metadata.json', b=SFTP.remote('newblue4.acrc.bris.ac.uk/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies/{id}/harmonised.gz')
+		'studies/{id}/elastic.gz'
 	output:
-		'studies/{id}/clump.txt'
+		'studies/{id}/derived/instruments/clump.txt'
 	shell:
-		"./scripts/clump.py --bfile {REF} --gwas-info {input.a} --gwas {input.b}"
+		"mkdir -p studies/{wildcards.id}/derived/instruments/; ./scripts/clump.py --bfile {REF} --gwas {input} --out {output}"
 
 
 # Step 2: Create a master list of all unique instrumenting SNPs
@@ -38,7 +37,7 @@ rule master_list:
 	output:
 		'studies/instruments.txt'
 	input:
-		expand('studies/{id}/clump.txt', id=ID)
+		expand('studies/{id}/derived/instruments/clump.txt', id=ID)
 	shell:
 		'./scripts/master_list.py --bfile {REF} --dirs studies --output {output}'
 
@@ -46,9 +45,9 @@ rule master_list:
 
 rule extract_master:
 	output:
-		'studies/{id}/master_list.csv.gz'
+		'studies/{id}/derived/instruments/master_list.csv.gz'
 	input:
-		a = rules.master_list.output, b = 'studies/{id}/metadata.json', c = SFTP.remote('newblue4.acrc.bris.ac.uk/panfs/panasas01/sscm/gh13047/repo/gwas-instrument-subsets/studies/{id}/harmonised.gz')
+		a = rules.master_list.output, b = 'studies/{id}/elastic.gz'
 	shell:
-		"./scripts/extract_master.r --bfile {REF} --gwas-info {input.b} --snplist {input.a} --gwas {input.c}"
+		"./scripts/extract_master.r --bfile {REF} --snplist {input.a} --gwas {input.b} --out {output}"
 
