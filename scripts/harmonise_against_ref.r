@@ -12,7 +12,7 @@ parser <- ArgumentParser()
 parser$add_argument('--ref-file', required=TRUE)
 parser$add_argument('--ref-build', required=TRUE, default="b37")
 parser$add_argument('--gwas-file', required=TRUE)
-parser$add_argument('--gwas-header', required=TRUE, defailt=FALSE)
+parser$add_argument('--gwas-header', required=TRUE, default=FALSE)
 parser$add_argument('--gwas-snp', type="integer", required=TRUE)
 parser$add_argument('--gwas-ref', type="integer", required=FALSE)
 parser$add_argument('--gwas-alt', type="integer", required=TRUE)
@@ -37,47 +37,47 @@ read_dat <- function(filename, type, header, snp, ref, alt, af, beta, se, pval, 
 		dat <- data.table::fread(filename, header=header)
 	}
 	nc <- ncol(dat)
-	if(is.na(snp))
+	if(snp == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		snp <- ncol(dat)
 	}
-	if(is.na(ref))
+	if(ref == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		ref <- ncol(dat)
 	}
-	if(is.na(alt))
+	if(alt == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		alt <- ncol(dat)
 	}
-	if(is.na(af))
+	if(af == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		af <- ncol(dat)
 	}
-	if(is.na(beta))
+	if(beta == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		beta <- ncol(dat)
 	}
-	if(is.na(se))
+	if(se == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		se <- ncol(dat)
 	}
-	if(is.na(pval))
+	if(pval == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		pval <- ncol(dat)
 	}
-	if(is.na(n0))
+	if(n0 == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		n0 <- ncol(dat)
 	}
-	if(is.na(n1))
+	if(n1 == 0)
 	{
 		dat[[paste0("V", ncol(dat)+1)]] <- rep(NA, nrow(dat))
 		n1 <- ncol(dat)
