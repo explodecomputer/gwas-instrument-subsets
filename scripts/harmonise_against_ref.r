@@ -4,6 +4,7 @@ suppressPackageStartupMessages(library(argparse))
 suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(TwoSampleMR))
 suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(vcfR))
 
 
 # create parser object
@@ -101,7 +102,6 @@ read_dat <- function(filename, type, header, snp, ref, alt, af, beta, se, pval, 
 }
 
 
-print(args)
 
 # Read in gwas data
 gwas <- read_dat(
@@ -123,10 +123,10 @@ gwas <- read_dat(
 # Read in ref
 
 ref <- data.table::fread(paste0("gunzip -c ", args[["ref_file"]]))
-stopifnot(c("CHROM", "ID", "REF", "ALT", "AF", "POS") %in% names(ref))
+stopifnot(all(c("CHROM", "ID", "REF", "ALT", "AF", "POS") %in% names(ref)))
 
 # For simplicity just keeping SNP Ids that are in common
-ref <- subset(ref, ID %in% gwas$snp_col)
+ref <- subset(ref, ID %in% gwas$SNP)
 
 # Put in some dummy variables for the reference for harmonising
 ref$beta <- 1
@@ -138,17 +138,17 @@ a <- TwoSampleMR::format_data(
         snp_col="ID",
         effect_allele_col="ALT",
         other_allele_col="REF",
-        eaf_col="MAF"
+        eaf_col="AF"
 )
 
 # Check strand
-action <- TwoSampleMR::is_forward_strand(gwas$SNP, gwas$effect_allele.exposure, gwas$other_allele.exposure, ref$ID, ref$ALT, ref$REF, threshold=0.9)
+action <- TwoSampleMR::is_forward_strand(gwas$SNP, gwas$effect_allele.outcome, gwas$other_allele.outcome, ref$ID, ref$ALT, ref$REF, threshold=0.9)
 
 # Harmonise
 dat <- TwoSampleMR::harmonise_data(a, gwas, action)
 
 
-gwas_h <- ab %$%
+gwas_h <- dat %$%
 	dplyr::data_frame(
 		ID=SNP,
 		ALT=effect_allele.exposure,
@@ -160,7 +160,7 @@ gwas_h <- ab %$%
 		N=samplesize.outcome,
 		NCASE=ncase.outcome,
 		NCONTROL=ncontrol.outcome) %>%
-	dplyr::inner_join(subset(ref, select=c(ID,REF,ALT,CHROM,POS,AF)), by=c("ID", "REF", "ALT"))
+	dplyr::inner_join(subset(ref, select=c(ID,REF,ALT,CHROM,POS)), by=c("ID", "REF", "ALT"))
 
 
 # Create vcf format
