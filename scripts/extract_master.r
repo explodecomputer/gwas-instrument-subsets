@@ -54,7 +54,7 @@ outname <- args[['out']]
 input_file <- args[['gwas']]
 
 input <- paste0("gunzip -c ", input_file)
-gwas <- fread(input)
+gwas <- fread(input, sep="\t", header=FALSE)
 
 # Rename gwas columns
 names(gwas) <- c("snp_col", "ea_col", "oa_col", "eaf_col", "beta_col", "se_col", "pval_col", "samplesize_col")

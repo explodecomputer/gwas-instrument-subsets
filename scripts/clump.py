@@ -37,28 +37,33 @@ logger.info(json.dumps(vars(args), indent=1))
 # Expect gzipped file
 f = gzip.open(gwasfile, 'rt')
 # Read header
-f.readline()
+f.readline().strip().split("\t")
 
 o = open(outfile + '.tophits', 'wt')
 o.write('SNP P\n')
 
 n=0
+h=0
+p=0
 for line in f:
-	x = line.strip().split("\n")
+	x = line.strip().split("\t")
+	n+=1
 	try:
 		if float(x[6]) < vars(args)['pval_threshold']:
 			o.write(x[0] + ' ' + x[6] + '\n')
 			n+=1
 	except:
-		logger.info("Error parsing line")
+		p+=1
 
 o.close()
 f.close()
 
 
-logger.info("found " + str(n) + " hits")
+logger.info("found " + str(n) + " lines")
+logger.info("found " + str(p) + " problem lines")
+logger.info("found " + str(h) + " hits")
 
-if n > 0:
+if h > 0:
 	x = ('plink --bfile ' + vars(args)['bfile'] +
 	' --clump ' + outfile + '.tophits' +
 	' --clump-kb ' + str(vars(args)['clump_kb']) +
