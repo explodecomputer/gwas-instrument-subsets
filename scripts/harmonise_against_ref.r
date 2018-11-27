@@ -12,7 +12,7 @@ parser <- ArgumentParser()
 parser$add_argument('--ref-file', required=TRUE)
 parser$add_argument('--ref-build', required=TRUE, default="b37")
 parser$add_argument('--gwas-file', required=TRUE)
-parser$add_argument('--gwas-header', required=TRUE, default=FALSE)
+parser$add_argument('--gwas-header', required=TRUE, type="logical", default=FALSE)
 parser$add_argument('--gwas-snp', type="integer", required=TRUE)
 parser$add_argument('--gwas-ref', type="integer", required=FALSE)
 parser$add_argument('--gwas-alt', type="integer", required=TRUE)
@@ -101,28 +101,28 @@ read_dat <- function(filename, type, header, snp, ref, alt, af, beta, se, pval, 
 }
 
 
-
+print(args)
 
 # Read in gwas data
 gwas <- read_dat(
-	args[["gwas-file"]],
+	args[["gwas_file"]],
 	type="outcome",
-	header=args[["gwas-header"]],
-	snp=args[["gwas-snp"]],
-	ref=args[["gwas-ref"]],
-	alt=args[["gwas-alt"]],
-	af=args[["gwas-af"]],
-	beta=args[["gwas-beta"]],
-	se=args[["gwas-se"]],
-	pval=args[["gwas-pval"]],
-	n0=args[["gwas-n0"]],
-	n1=args[["gwas-n1"]]
+	header=args[["gwas_header"]],
+	snp=args[["gwas_snp"]],
+	ref=args[["gwas_ref"]],
+	alt=args[["gwas_alt"]],
+	af=args[["gwas_af"]],
+	beta=args[["gwas_beta"]],
+	se=args[["gwas_se"]],
+	pval=args[["gwas_pval"]],
+	n0=args[["gwas_n0"]],
+	n1=args[["gwas_n1"]]
 )
 
 
 # Read in ref
 
-ref <- data.table::fread(paste0("gunzip -c ", args[["ref"]]))
+ref <- data.table::fread(paste0("gunzip -c ", args[["ref_file"]]))
 stopifnot(c("CHROM", "ID", "REF", "ALT", "AF", "POS") %in% names(ref))
 
 # For simplicity just keeping SNP Ids that are in common
@@ -178,7 +178,7 @@ vcf <- TwoSampleMR::make_vcf(
                 AF = gwas_h$AF,
                 QUAL = rep(NA, nrow(gwas_h)),
                 FILTER = rep("PASS", nrow(gwas_h)),
-                build = args[["ref-build"]]
+                build = args[["ref_build"]]
         )
 
 # Write vcf

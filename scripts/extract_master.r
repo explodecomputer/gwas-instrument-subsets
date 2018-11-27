@@ -88,7 +88,9 @@ b <- format_data(gwas_1, type="outcome",
 	pval_col="pval_col"
 )
 
-ab <- harmonise_data(a, b)
+action <- is_forward_strand(b$SNP, b$effect_allele.outcome, b$other_allele.outcome, a$SNP, a$effect_allele.exposure, a$other_allele.exposure)
+
+ab <- harmonise_data(a, b, action=action)
 
 check_cols <- c("samplesize.outcome", "effect_allele.outcome", "other_allele.outcome", "eaf.outcome", "pval.outcome", "beta.outcome", "se.outcome", "SNP")
 
@@ -207,7 +209,6 @@ message("Proxy SNPs: ", sum(!is.na(gwas_1$proxy)))
 message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 
 write_out(gwas_1, outname)
-
 
 if(args[["no_clean"]] == FALSE)
 {

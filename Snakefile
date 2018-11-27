@@ -2,16 +2,18 @@ import os.path
 import re
 
 # Define some variables
-REF = 'ref/data_maf0.01_rs_snps'
+REF = '../reference/1000g_filtered/data_maf0.01_rs_snps'
 # configfile: 'config.json'
 
 # Find all the initial study files
-# ID = ['2', '6', '7']
 # ID = [1237]
 ID = [ name for name in os.listdir('studies') if os.path.isdir(os.path.join('studies', name)) ]
 ID1 = list(filter(lambda x: re.search('^UKB-a', x), ID))
 ID2 = list(filter(lambda x: re.search('^[0-9]', x), ID))
 ID = ID1 + ID2
+
+
+ID = ['2', '6', '7']
 
 
 # Setup SFTP

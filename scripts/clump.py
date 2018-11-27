@@ -51,7 +51,7 @@ for line in f:
 	try:
 		if float(x[6]) < vars(args)['pval_threshold']:
 			o.write(x[0] + ' ' + x[6] + '\n')
-			n+=1
+			h+=1
 	except:
 		p+=1
 
@@ -95,4 +95,5 @@ else:
 if vars(args)['no_clean'] is False:
 	for f in glob.glob(outfile + ".*"):
 		os.remove(f)
+
 
