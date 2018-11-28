@@ -2,7 +2,9 @@ import os.path
 import re
 
 # Define some variables
-REF = '../reference/1000g_filtered/data_maf0.01_rs_snps'
+# REF = '../reference/1000g_filtered/data_maf0.01_rs_snps'
+REF = '../reference/ukb/ukb_ref'
+
 # configfile: 'config.json'
 
 # Find all the initial study files
@@ -13,7 +15,7 @@ ID2 = list(filter(lambda x: re.search('^[0-9]', x), ID))
 ID = ID1 + ID2
 
 
-#ID = ['2', '6', '7']
+# ID = ['2', '6', '7']
 
 
 # Setup SFTP
@@ -54,7 +56,7 @@ rule extract_master:
 	output:
 		'studies/{id}/derived/instruments/master_list.csv.gz'
 	input:
-		a = rules.master_list.output, b = 'studies/{id}/elastic.gz'
+		a = rules.master_list.output, b = 'studies/{id}/elastic.gz', c = rules.clump.output
 	shell:
-		"./scripts/extract_master.r --bfile {REF} --snplist {input.a} --gwas {input.b} --out {output}"
+		"./scripts/extract_master.r --bfile {REF} --snplist {input.a} --gwas {input.b} --out {output} --gwas-id {wildcards.id} --instrument-list {input.c}"
 

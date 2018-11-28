@@ -5,7 +5,7 @@
 		"nodes": "1",
 		"cpus-per-task": "1",
 		"time": "0-00:30:00",
-		"mem": "6G",
+		"mem": "10G",
 		"output": "logs/{rule}.{wildcards}.out"
 	}
 }

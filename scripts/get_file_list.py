@@ -103,13 +103,12 @@ mrbase = []
 for d in ids:
 	if d['filename'] in gwas_dict:
 		gzipflag = d['filename'].endswith('.gz')
-		headerflag = 'cleaned_597' in gwas_dict[d['filename']]
 		mrbase.append({
 			'id': d['id'],
 			'elastic_file': d['filename'],
 			'elastic_file_path': gwas_dict[d['filename']],
 			'gzipped': gzipflag,
-			'header': headerflag,
+			'header': False,
 			'delimiter': '\t',
 			'snp_col': 1,
 			'ea_col': 2,

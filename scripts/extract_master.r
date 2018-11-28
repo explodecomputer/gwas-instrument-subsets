@@ -29,6 +29,7 @@ parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
 parser$add_argument('--gwas', required=FALSE)
 parser$add_argument('--gwas-id', required=TRUE)
+parser$add_argument('--instrument-list', required=TRUE)
 parser$add_argument('--out', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
 parser$add_argument('--tag-r2', type="double", default=0.6)
@@ -202,8 +203,11 @@ if(length(missing_snps) > 0)
 
 gwas_1$trait <- args[["gwas_id"]]
 
+inst <- scan(args[["instrument_list"]], what=character())
+gwas_1$instrument <- as.numeric(gwas_1$SNP %in% inst)
+
 gwas_1 <- select(gwas_1,
-	SNP, trait, ea, oa, beta, se, eaf, samplesize, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
+	SNP, trait, instrument, ea, oa, beta, se, eaf, samplesize, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
 )
 names(gwas_1)[1] <- "snp"
 
