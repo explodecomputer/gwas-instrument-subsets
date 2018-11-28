@@ -28,7 +28,6 @@ is_palindrome <- function(a1, a2)
 parser <- ArgumentParser()
 parser$add_argument('--bfile', required=TRUE)
 parser$add_argument('--gwas', required=FALSE)
-parser$add_argument('--gwas-id', required=TRUE)
 parser$add_argument('--out', required=TRUE)
 parser$add_argument('--snplist', required=TRUE)
 parser$add_argument('--tag-r2', type="double", default=0.6)
@@ -89,9 +88,7 @@ b <- format_data(gwas_1, type="outcome",
 	pval_col="pval_col"
 )
 
-action <- is_forward_strand(b$SNP, b$effect_allele.outcome, b$other_allele.outcome, a$SNP, a$effect_allele.exposure, a$other_allele.exposure)
-
-ab <- harmonise_data(a, b, action=action)
+ab <- harmonise_data(a, b)
 
 check_cols <- c("samplesize.outcome", "effect_allele.outcome", "other_allele.outcome", "eaf.outcome", "pval.outcome", "beta.outcome", "se.outcome", "SNP")
 
@@ -200,10 +197,8 @@ if(length(missing_snps) > 0)
 	gwas_1$proxy_eaf <- NA
 }
 
-gwas_1$trait <- args[["gwas_id"]]
-
 gwas_1 <- select(gwas_1,
-	SNP, trait, ea, oa, beta, se, eaf, samplesize, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
+	SNP, ea, oa, beta, se, eaf, samplesize, pval, proxy, proxy_r2, proxy_ea, proxy_oa, proxy_eaf
 )
 names(gwas_1)[1] <- "snp"
 
@@ -212,6 +207,7 @@ message("Proxy SNPs: ", sum(!is.na(gwas_1$proxy)))
 message("Lost SNPs: ", sum(!snplist %in% gwas_1$snp))
 
 write_out(gwas_1, outname)
+
 
 if(args[["no_clean"]] == FALSE)
 {

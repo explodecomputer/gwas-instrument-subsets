@@ -72,19 +72,22 @@ if h > 0:
 	' --clump-p2 ' + str(vars(args)['pval_threshold']) +
 	' --out ' + outfile)
 	subprocess.call(x, shell=True)
-	f = open(outfile + '.clumped', 'rt')
-	o = open(outfile, 'wt')
-	f.readline()
-	n=0
-	for line in f:
-		try:
-			o.write(line.strip().split()[2] + '\n')
-			n+=1
-		except:
-			pass
-	o.close()
-	f.close()
-	logger.info("found " + str(n) + " clumps")
+	try:
+		f = open(outfile + '.clumped', 'rt')
+		o = open(outfile, 'wt')
+		f.readline()
+		n=0
+		for line in f:
+			try:
+				o.write(line.strip().split()[2] + '\n')
+				n+=1
+			except:
+				pass
+		o.close()
+		f.close()
+		logger.info("found " + str(n) + " clumps")
+	except:
+		open(outfile, 'a').close()
 else:
 	try:
 		os.remove(outfile)

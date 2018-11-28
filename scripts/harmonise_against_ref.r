@@ -5,7 +5,8 @@ suppressPackageStartupMessages(library(dplyr))
 suppressPackageStartupMessages(library(TwoSampleMR))
 suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(vcfR))
-
+library(methods)
+library(utils)
 
 # create parser object
 parser <- ArgumentParser()

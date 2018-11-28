@@ -13,7 +13,7 @@ ID2 = list(filter(lambda x: re.search('^[0-9]', x), ID))
 ID = ID1 + ID2
 
 
-ID = ['2', '6', '7']
+#ID = ['2', '6', '7']
 
 
 # Setup SFTP
