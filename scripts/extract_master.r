@@ -8,6 +8,8 @@ suppressPackageStartupMessages(library(data.table))
 suppressPackageStartupMessages(library(tidyr))
 suppressPackageStartupMessages(library(jsonlite))
 
+options(datatable.fread.input.cmd.message=FALSE)
+
 write_out <- function(x, basename, header=FALSE)
 {
 	g <- gzfile(paste0(basename), "w")
