@@ -119,6 +119,13 @@ gwas_1 <- ab %>% filter(mr_keep) %$%
 		pval=pval.outcome
 	)
 
+if(nrow(gwas_1) == 0)
+{
+	write_out(gwas_1, outname)
+	q()
+}
+
+
 
 ## missing snps
 

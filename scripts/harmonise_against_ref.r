@@ -12,7 +12,6 @@ library(utils)
 parser <- ArgumentParser()
 
 parser$add_argument('--ref-file', required=TRUE)
-parser$add_argument('--ref-build', required=TRUE, default="b37")
 parser$add_argument('--gwas-file', required=TRUE)
 parser$add_argument('--gwas-header', required=TRUE, type="logical", default=FALSE)
 parser$add_argument('--gwas-snp', type="integer", required=TRUE)
@@ -104,6 +103,22 @@ read_dat <- function(filename, type, header, snp, ref, alt, af, beta, se, pval, 
 
 
 
+get_ref <- function(reference_file, snplist, outfile)
+{
+	out1 <- paste0(outfile, ".snplist")
+	out2 <- paste0(outfile, ".ref")
+	write.table(snplist, file=out1, row=F, col=F, qu=F)
+
+	# Extract relevent info
+	cmd <- paste0("time bcftools view -i'ID=@", out1, "' ", reference_file, " | bcftools query -f'%CHROM\t%POS\t%ID\t%REF\t%ALT\t%AF\n' > ", out2)
+	system(cmd)
+	unlink(out1)
+	a <- data.table::fread(out2, header=FALSE, sep="\t")
+	unlink(out2)
+	names(a) <- c("CHROM", "POS", "ID", "REF", "ALT", "AF")
+	return(a)
+}
+
 # Read in gwas data
 gwas <- read_dat(
 	args[["gwas_file"]],
@@ -120,30 +135,19 @@ gwas <- read_dat(
 	n1=args[["gwas_n1"]]
 )
 
-
 # Read in ref
-
-ref <- data.table::fread(paste0("gunzip -c ", args[["ref_file"]]))
-stopifnot(all(c("CHROM", "ID", "REF", "ALT", "AF", "POS") %in% names(ref)))
-
-# For simplicity just keeping SNP Ids that are in common
-ref <- subset(ref, ID %in% gwas$SNP)
-
-# Put in some dummy variables for the reference for harmonising
-ref$beta <- 1
-ref$se <- 0.1
-ref$pval <- 0.1
+ref <- get_ref(args[["ref_file"]], gwas$SNP, args[["out"]]) 
 a <- TwoSampleMR::format_data(
-        ref,
-        type="exposure",
-        snp_col="ID",
-        effect_allele_col="ALT",
-        other_allele_col="REF",
-        eaf_col="AF"
+	ref,
+	type="exposure",
+	snp_col="ID",
+	effect_allele_col="ALT",
+	other_allele_col="REF",
+	eaf_col="AF"
 )
 
 # Check strand
-action <- TwoSampleMR::is_forward_strand(gwas$SNP, gwas$effect_allele.outcome, gwas$other_allele.outcome, ref$ID, ref$ALT, ref$REF, threshold=0.9)
+action <- TwoSampleMR::is_forward_strand(gwas$SNP, gwas$effect_allele.outcome, gwas$other_allele.outcome, a$SNP, a$effect_allele.exposure, a$other_allele.exposure, threshold=0.9)
 
 # Harmonise
 dat <- TwoSampleMR::harmonise_data(a, gwas, action)
@@ -179,7 +183,7 @@ vcf <- TwoSampleMR::make_vcf(
                 AF = gwas_h$AF,
                 QUAL = rep(NA, nrow(gwas_h)),
                 FILTER = rep("PASS", nrow(gwas_h)),
-                build = args[["ref_build"]]
+                build = "b37"
         )
 
 # Write vcf
