@@ -11,10 +11,9 @@ import os
 parser = argparse.ArgumentParser(description = 'Extract and clump top hits')
 parser.add_argument('--dirs', nargs='+', required=True)
 parser.add_argument('--output', required=True)
-parser.add_argument('--bfile', required=True)
 
 
-args=parser.parse_args(['--dirs', '../studies', '--output', '../studies/instrument-master.txt', '--bfile', '../ref/data_maf0.01_rs_snps'])
+###args=parser.parse_args(['--dirs', '../../gwas-files', '--output', '../../gwas-files/instrument-master.txt'])
 
 args = parser.parse_args()
 
@@ -48,11 +47,5 @@ logging.info("total instrument count: " + str(new_count))
 o = open(vars(args)['output'], 'wt')
 [o.write(x + '\n') for x in snps]
 o.close()
-
-## Make reference dataset also
-
-cmd = "plink --bfile " + vars(args)['bfile'] + " --extract " + vars(args)['output'] + " --freq --out " + vars(args)['bfile'] + ".master"
-subprocess.call(cmd, shell=True)
-
 
 
